@@ -1,5 +1,5 @@
 import pickle as pickle
-from script.data_preprocessing import *
+from scripts.data_preprocessing import *
 
 train = get_train_dataframe()
 test = get_test_dataframe()

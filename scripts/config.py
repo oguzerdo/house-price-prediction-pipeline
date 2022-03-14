@@ -1,4 +1,4 @@
-from script.train import *
+from scripts.train import *
 import pandas as pd
 
 today = pd.to_datetime("today").strftime('%d-%m-%Y-%H:%M')

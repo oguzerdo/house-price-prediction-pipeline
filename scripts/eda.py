@@ -1,4 +1,4 @@
-from script.helper_functions import *
+from scripts.helper_functions import *
 
 pd.set_option('display.max_columns', None)
 pd.set_option('display.float_format', lambda x: '%.5f' % x)

@@ -1,4 +1,4 @@
-from script.helper_functions import *
+from scripts.helper_functions import *
 
 
 train = get_train_dataframe()

@@ -1,11 +1,8 @@
 import json
 import os
 
-import pandas as pd
-
-from script.feature_engineering import *
-from script.train import *
-from script.config import *
+from scripts.feature_engineering import *
+from scripts.config import *
 
 pd.set_option('display.max_rows', None)
 pd.set_option('display.max_columns', None)
@@ -39,7 +36,6 @@ best_models
 
 # Automated Hyperparameter Optimization
 
-final_models = {}
 
 print("\n########### Hyperparameter Optimization ###########\n")
 for index, row in best_models.iterrows():
@@ -48,18 +44,18 @@ for index, row in best_models.iterrows():
     params = row['params']
 
     print(f"########## {name} ##########")
-    rmse = np.mean(np.sqrt(-cross_val_score(model, X, y, cv=10, scoring="neg_mean_squared_error")))
+    rmse = np.mean(np.sqrt(-cross_val_score(model, X, y, cv=10, scoring="neg_mean_squared_error")))  # base model rmse
     print(f"RMSE: {round(rmse, 4)} ({name}) ")
 
-    gs_best = GridSearchCV(model, params, cv=3, n_jobs=-1, verbose=False).fit(X, y) # finding best params
+    gs_best = GridSearchCV(model, params, cv=3, n_jobs=-1, verbose=False).fit(X, y)  # finding best params
 
-    final_model = model.set_params(**gs_best.best_params_) # save best params model
-    rmse_new = np.mean(np.sqrt(-cross_val_score(final_model, X, y, cv=10, scoring="neg_mean_squared_error")))
+    final_model = model.set_params(**gs_best.best_params_)  # save best params model
+    rmse_new = np.mean(np.sqrt(-cross_val_score(final_model, X, y, cv=10, scoring="neg_mean_squared_error")))   # tuned model rmse score
     print(f"RMSE (After): {round(rmse_new, 4)} ({name}) ")
 
     print(f"{name} best params: {gs_best.best_params_}", end="\n\n")
 
-    final_models[name] = final_model
+    # MODEL SAVING PART
     today = pd.to_datetime("today").strftime('%d-%m-%Y-%H:%M')
     model_info = dict(date=today, name=name, rmse=rmse,
                       rmse_new=rmse_new, count=X.shape[0],
@@ -90,12 +86,12 @@ for index, row in best_models.iterrows():
 
     voting_rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
     print("\n########## Best Models ##########\n")
-    print(pd.json_normalize(json.load(open("outputs/model_info_data.json",'r'))["data"],max_level=0) \
+    print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0) \
           .sort_values('date', ascending=False)[0:3][["name", "rmse_new"]])
     print("\n########## Voting Regressor ##########\n")
     print(f"RMSE: {round(voting_rmse, 4)} (Voting Regressor) ")
     voting_model.fit(X, y)
 
+    # Save voting_model
     with open(model_dir + f'{int(voting_rmse)}-VotingModel-{today}.pkl', 'wb') as f:
         pickle.dump(voting_model, f)
-

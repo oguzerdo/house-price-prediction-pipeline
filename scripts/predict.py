@@ -1,6 +1,6 @@
 import pickle as pickle
 
-from script.helper_functions import *
+from scripts.helper_functions import *
 
 
 #######################################

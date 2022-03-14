@@ -1,8 +1,8 @@
 
-from script.eda import *
-from script.feature_engineering_org import *
-from script.predict import *
-from script.train import *
+from scripts.eda import *
+from scripts.feature_engineering import *
+from scripts.predict import *
+from scripts.train import *
 from contextlib import contextmanager
 import time
 

@@ -1,10 +1,9 @@
 import pickle as pickle
 import warnings
 
-import pandas as pd
 from catboost import CatBoostRegressor
 from lightgbm import LGBMRegressor
-from script.helper_functions import *
+from scripts.helper_functions import *
 from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, VotingRegressor
 from sklearn.exceptions import ConvergenceWarning
 from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
@@ -22,8 +21,8 @@ def traininig():
     train_df = pickle.load(open(pickle_dir + 'train_dataframe.pkl', 'rb'))
     test_df = pickle.load(open(pickle_dir + 'test_dataframe.pkl', 'rb'))
 
-    y = np.log1p(train_df['SALEPRICE'])
-    X = train_df.drop(["SALEPRICE", "ID"], axis=1)
+    y = np.log1p(train_df['SalePrice'])
+    X = train_df.drop(["SalePrice", "Id"], axis=1)
     selected_features = feature_selection(X, y)
     X = X[selected_features]
 
