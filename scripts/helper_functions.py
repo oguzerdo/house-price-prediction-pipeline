@@ -192,26 +192,20 @@ def feature_selection(X, y):
     return selected_features_BE
 
 def all_models(X, y, test_size=0.2, random_state=42, classification=False, holdout=False, cv_value=10, return_=True):
-    from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score, \
-        roc_auc_score, confusion_matrix, classification_report, plot_roc_curve, mean_squared_error
+    from sklearn.metrics import accuracy_score, mean_squared_error
     from sklearn.model_selection import train_test_split, cross_val_score
     # Tum Base Modeller (Classification)
-    from sklearn.linear_model import LogisticRegression
-    from sklearn.neighbors import KNeighborsClassifier
+
     from sklearn.tree import DecisionTreeClassifier
     from sklearn.ensemble import RandomForestClassifier
     from sklearn.ensemble import GradientBoostingClassifier
     from catboost import CatBoostClassifier
     from lightgbm import LGBMClassifier
-    from sklearn.svm import SVC
 
     # Tum Base Modeller (Regression)
     from catboost import CatBoostRegressor
     from lightgbm import LGBMRegressor
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
-    from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
-    from sklearn.neighbors import KNeighborsRegressor
-    from sklearn.svm import SVR
     from sklearn.tree import DecisionTreeRegressor
     from xgboost import XGBRegressor
     from xgboost import XGBClassifier

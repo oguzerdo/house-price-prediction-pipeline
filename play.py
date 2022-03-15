@@ -56,7 +56,7 @@ for index, row in best_models.iterrows():
     print(f"{name} best params: {gs_best.best_params_}", end="\n\n")
 
     # MODEL SAVING PART
-    today = pd.to_datetime("today").strftime('%d-%m-%Y-%H:%M')
+    today = pd.to_datetime("today").strftime('%d-%m-%Y-%H.%M')
     model_info = dict(date=today, name=name, rmse=rmse,
                       rmse_new=rmse_new, count=X.shape[0],
                       best_params=gs_best.best_params_)
@@ -77,21 +77,24 @@ for index, row in best_models.iterrows():
     # Save Models
     os.makedirs("outputs/pickles/models", exist_ok=True)
     model_dir = "outputs/pickles/models/"
-    with open(model_dir + f'{int(rmse_new)}-{name}-{today}.pkl', 'wb') as f:
+    with open(model_dir + f'{today}-{name}-{int(rmse_new)}.pkl', 'wb') as f:
         pickle.dump(final_model, f)
 
-    voting_model = VotingRegressor(estimators=[(best_models.iloc[0]["name"], best_models.iloc[0]["model"]),
-                                               (best_models.iloc[1]["name"], best_models.iloc[1]["model"]),
-                                               (best_models.iloc[2]["name"], best_models.iloc[2]["model"])])
 
-    voting_rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
-    print("\n########## Best Models ##########\n")
-    print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0) \
-          .sort_values('date', ascending=False)[0:3][["name", "rmse_new"]])
-    print("\n########## Voting Regressor ##########\n")
-    print(f"RMSE: {round(voting_rmse, 4)} (Voting Regressor) ")
-    voting_model.fit(X, y)
+voting_model = VotingRegressor(estimators=[(best_models.iloc[0]["name"], best_models.iloc[0]["model"]),
+                                           (best_models.iloc[1]["name"], best_models.iloc[1]["model"]),
+                                           (best_models.iloc[2]["name"], best_models.iloc[2]["model"])])
 
-    # Save voting_model
-    with open(model_dir + f'{int(voting_rmse)}-VotingModel-{today}.pkl', 'wb') as f:
-        pickle.dump(voting_model, f)
+voting_rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
+print("\n########## Best Models ##########\n")
+print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0) \
+      .sort_values('date', ascending=False)[0:3][["name", "rmse_new"]])
+print("\n########## Voting Regressor ##########\n")
+print(f"RMSE: {round(voting_rmse, 4)} (Voting Regressor) ")
+voting_model.fit(X, y)
+
+# Save voting_model
+with open(model_dir + f'{int(voting_rmse)}-VotingModel-{today}.pkl', 'wb') as f:
+    pickle.dump(voting_model, f)
+
+
