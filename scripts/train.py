@@ -16,13 +16,15 @@ def train_model(debug=False, tuning=True):
     cur_dir = os.getcwd()
     pickle_dir = cur_dir + '/outputs/pickles/'
     train_df = pd.read_pickle(pickle_dir + 'train_dataframe.pkl')
-    print("Train dataset loaded. Observation number: ", train_df.shape[0], "\n")
+
 
     if debug:
         train_df = train_df.sample(100)
         print("Debug mode is active. Running with subsample train set...", "\n")
     else:
         pass
+
+    print("Train dataset loaded. Observation number: ", train_df.shape[0], "\n")
 
     y = train_df['SalePrice']
     X = train_df.drop(["SalePrice", "Id"], axis=1)
