@@ -32,4 +32,6 @@ install:
 	pip install -r requirements.txt
 
 
+models:
+	python scripts/model_history.py
 

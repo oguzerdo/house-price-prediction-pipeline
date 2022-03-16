@@ -97,15 +97,11 @@ def data_preprocessing(dataframe):
 
     cat_cols, num_cols, cat_but_car = grab_col_names(dataframe)
 
-    num_cols = [col for col in num_cols if col not in ["SALEPRICE"]]
-
-    # for col in num_cols:
-    #    print(col, check_outlier(dataframe, col, q1=0.01, q3=0.99))
+    num_cols = [col for col in num_cols if col not in ["SalePrice"]]
 
     for col in num_cols:
         replace_with_thresholds(dataframe, col, q1=0.01, q3=0.99)
 
-    #dataframe.describe([0.05, 0.10, 0.25, 0.50, 0.75, 0.80, 0.90, 0.95, 0.99]).T
 
     return dataframe
 

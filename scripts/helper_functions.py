@@ -8,15 +8,17 @@ import statsmodels.api as sm
 from matplotlib import pyplot as plt
 from sklearn.preprocessing import LabelEncoder
 
-
+# command line access for debuging
 def get_namespace():
+    import argparse
     parser = argparse.ArgumentParser()
-
-    parser.add_argument('--eda', dest='eda', action='store_true')
-    parser.set_defaults(eda=False)
-
+    parser.add_argument('--debug', dest='debug', action='store_true')
+    parser.add_argument('--no-debug', dest='debug', action='store_false')
+    parser.add_argument('--tuning', dest='tuning', action='store_true')
+    parser.add_argument('--no-tuning', dest='tuning', action='store_false')
+    parser.set_defaults(debug=True)
+    parser.set_defaults(tuning=True)
     return parser.parse_args()
-
 
 def get_train_dataframe():
     return pd.read_csv("data/train.csv")
@@ -238,12 +240,12 @@ def all_models(X, y, test_size=0.2, random_state=42, classification=False, holdo
                 all_models.append(values)
         sort_method = False
     else:  # For Regression
-        models = [('CART', DecisionTreeRegressor()),
-                  ('RF', RandomForestRegressor()),
-                  ('GBM', GradientBoostingRegressor()),
-                  ("XGBoost", XGBRegressor()),
-                  ("LightGBM", LGBMRegressor()),
-                  ("CatBoost", CatBoostRegressor(verbose=False))]
+        models = [('CART', DecisionTreeRegressor(random_state=random_state)),
+                  ('RF', RandomForestRegressor(random_state=random_state)),
+                  ('GBM', GradientBoostingRegressor(random_state=random_state)),
+                  ("XGBoost", XGBRegressor(random_state=random_state)),
+                  ("LightGBM", LGBMRegressor(random_state=random_state)),
+                  ("CatBoost", CatBoostRegressor(verbose=False, random_state=random_state))]
 
         if holdout:
             for name, model in models:

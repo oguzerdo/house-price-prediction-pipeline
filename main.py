@@ -27,7 +27,7 @@ def timer(title):
         print(" ")
 
 
-def main(debug=True):
+def main(debug=True, tuning=True):
     with timer("Pipeline"):
         print("Pipeline started")
         with timer("Reading Dataset"):
@@ -46,14 +46,16 @@ def main(debug=True):
 
         with timer("Training"):
             print("Training Started")
-            final_model = train_model(debug)
+            final_model, selected_features = train_model(debug, tuning)
 
         with timer("Predicting"):
             print("Predicting the Results")
-            predict(final_model)
+            predict(final_model, selected_features)
 
 
 if __name__ == "__main__":
-    main()
-
+    namespace = get_namespace()
+    with timer("Full model run"):
+        main(debug=namespace.debug,
+             tuning=namespace.tuning)
 
