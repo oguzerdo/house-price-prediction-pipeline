@@ -87,8 +87,7 @@ voting_model = VotingRegressor(estimators=[(best_models.iloc[0]["name"], best_mo
 
 voting_rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
 print("\n########## Best Models ##########\n")
-print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0) \
-      .sort_values('date', ascending=False)[0:3][["name", "rmse_new"]])
+print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0).sort_values('date', ascending=False)[0:3][["name", "rmse_new"]])
 print("\n########## Voting Regressor ##########\n")
 print(f"RMSE: {round(voting_rmse, 4)} (Voting Regressor) ")
 voting_model.fit(X, y)
@@ -96,5 +95,29 @@ voting_model.fit(X, y)
 # Save voting_model
 with open(model_dir + f'{int(voting_rmse)}-VotingModel-{today}.pkl', 'wb') as f:
     pickle.dump(voting_model, f)
+
+
+
+pickle_dir = os.getcwd() + '/outputs/pickles/'
+train_df = pickle.load(open(pickle_dir + 'train_dataframe.pkl', 'rb'))
+test_df = pickle.load(open(pickle_dir + 'test_dataframe.pkl', 'rb'))
+y = train_df['SalePrice']
+X = train_df.drop(["SalePrice", "Id"], axis=1)
+# selected_features = feature_selection(X, y)
+
+##### Predicting #####
+submission_df = pd.DataFrame()
+submission_df['Id'] = test_df["Id"].astype(int)
+y_pred_sub = voting_model.predict(test_df[selected_features])
+
+submission_df['SalePrice'] = y_pred_sub
+
+curr_dir = os.getcwd()
+os.makedirs("outputs/submission", exist_ok=True)
+result_dir = curr_dir + '/outputs/submission/'
+submission_df.to_csv(result_dir + 'submission.csv', index=False)
+
+train_df.shape
+test_df.shape
 
 

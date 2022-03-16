@@ -81,7 +81,7 @@ def feature_engineering(dataframe):
     for col in useless_cols_new:
         dataframe.drop(col, axis=1, inplace=True)
 
-    ###### Saving Test and Train dataframe as pickle ######
+    # Saving Test and Train dataframe as pickle
     train_dataframe = dataframe[dataframe["SalePrice"].notnull()]
     test_dataframe = dataframe[dataframe["SalePrice"].isnull()].drop("SalePrice", axis=1)
 

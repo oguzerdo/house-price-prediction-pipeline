@@ -1,126 +1,106 @@
-import pickle as pickle
-import warnings
+"""
+Train script
+"""
 
-from catboost import CatBoostRegressor
-from lightgbm import LGBMRegressor
-from scripts.helper_functions import *
-from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor, VotingRegressor
-from sklearn.exceptions import ConvergenceWarning
-from sklearn.linear_model import LinearRegression, Ridge, Lasso, ElasticNet
+import pandas as pd
+import os
+import json
+import pickle
+from sklearn.ensemble import VotingRegressor
 from sklearn.model_selection import cross_val_score, GridSearchCV
-from sklearn.neighbors import KNeighborsRegressor
-from sklearn.svm import SVR
-from sklearn.tree import DecisionTreeRegressor
-from xgboost import XGBRegressor
+from scripts.config import *
+from scripts.helper_functions import *
 
-warnings.simplefilter("ignore", category=ConvergenceWarning)
 
-def traininig():
-    pickle_dir = os.getcwd() + '/outputs/pickles/'
+def train_model(debug=False, tuning=True):
+    cur_dir = os.getcwd()
+    pickle_dir = cur_dir + '/outputs/pickles/'
+    train_df = pd.read_pickle(pickle_dir + 'train_dataframe.pkl')
+    print("Train dataset loaded. Observation number: ", train_df.shape[0], "\n")
 
-    train_df = pickle.load(open(pickle_dir + 'train_dataframe.pkl', 'rb'))
-    test_df = pickle.load(open(pickle_dir + 'test_dataframe.pkl', 'rb'))
+    if debug:
+        train_df = train_df.sample(100)
+        print("Debug mode is active. Running with subsample train set...", "\n")
+    else:
+        pass
 
-    y = np.log1p(train_df['SalePrice'])
+    y = train_df['SalePrice']
     X = train_df.drop(["SalePrice", "Id"], axis=1)
-    selected_features = feature_selection(X, y)
+    selected_features = feature_selection(X, y)  # feature selection
     X = X[selected_features]
 
-    models = [('LR', LinearRegression()),
-              ("Ridge", Ridge()),
-              ("Lasso", Lasso()),
-              ("ElasticNet", ElasticNet()),
-              ('KNN', KNeighborsRegressor()),
-              ('CART', DecisionTreeRegressor()),
-              ('RF', RandomForestRegressor()),
-              ('SVR', SVR()),
-              ('GBM', GradientBoostingRegressor()),
-              ("XGBoost", XGBRegressor(objective='reg:squarederror')),
-              ("LightGBM", LGBMRegressor()),
-              ("CatBoost", CatBoostRegressor(verbose=False))]
+    # Model Report
+    print("Model Report is started.")
 
-    print("\n########### BASE MODELS ###########\n")
-    all_models(X, y, cv_value=5, return_=False)
+    models = all_models(X, y, classification=False, cv_value=5, return_=True)
+    best_models = models[0:3].merge(models_df, how='left', on='name')[["name", "model", "params"]]
 
-    # TODO Hyperparameter option, if not select best model from all_models func.
-    ######################################################
-    # Automated Hyperparameter Optimization
-    ######################################################
+    if tuning:
+        # Automated Hyperparameter Optimization
+        print("\n########### Hyperparameter Optimization ###########\n")
+        for index, row in best_models.iterrows():
+            name = row['name']
+            model = row['model']
+            params = row['params']
 
-    ###### CART ######
-    cart_params = {'max_depth': range(1, 20),
-                   "min_samples_split": range(2, 30)}
+            print(f"########## {name} ##########")
+            rmse = np.mean(
+                np.sqrt(-cross_val_score(model, X, y, cv=10, scoring="neg_mean_squared_error")))  # base model rmse
+            print(f"RMSE: {round(rmse, 4)} ({name}) ")
 
-    ###### Random Forests ######
-    rf_params = {"max_depth": [20, 22, 24],
-                 "max_features": [30, 32, 34],
-                 "n_estimators": [400, 600, 800],
-                 "min_samples_split": [2, 4]}
+            gs_best = GridSearchCV(model, params, cv=3, n_jobs=-1, verbose=False).fit(X, y)  # finding best params
 
-    ###### GBM Model ######
-    gbm_params = {"learning_rate": [0.01, 0.1],
-                  "max_depth": [3, 4, 5],
-                  "n_estimators": [1600, 1800, 2000],
-                  "subsample": [0.2, 0.3, 0.4],
-                  "loss": ['huber'],
-                  "max_features": ['sqrt']}
+            final_model = model.set_params(**gs_best.best_params_)  # save best params model
+            rmse_new = np.mean(np.sqrt(
+                -cross_val_score(final_model, X, y, cv=10, scoring="neg_mean_squared_error")))  # tuned model rmse score
+            print(f"RMSE (After): {round(rmse_new, 4)} ({name}) ")
 
-    ###### XGBoost ######
-    xgboost_params = {"learning_rate": [0.1, 0.01, 0.001],
-                      "max_depth": [5, 8, 12, 15, 20],
-                      "n_estimators": [100, 500, 1000],
-                      "colsample_bytree": [0.5, 0.7, 1]}
+            print(f"{name} best params: {gs_best.best_params_}", end="\n\n")
 
-    ###### LightGBM ######
-    lightgbm_params = {"learning_rate": [0.01, 0.1],
-                       "n_estimators": [1300, 1500, 1700],
-                       "colsample_bytree": [0.2, 0.3, 0.4]}
+            # MODEL SAVING PART
+            today = pd.to_datetime("today").strftime('%d-%m-%Y-%H.%M')
+            model_info = dict(date=today, name=name, rmse=rmse,
+                              rmse_new=rmse_new, count=X.shape[0],
+                              best_params=gs_best.best_params_)
 
-    ###### CatBoost ######
-    catboost_params = {"iterations": [400, 500, 600],
-                       "learning_rate": [0.01, 0.1],
-                       "depth": [4, 5, 6, 7]}
+            try:  # Save model info to JSON
+                with open('outputs/model_info_data.json', 'r+') as f:
+                    model_info_data = json.load(f)
 
+                model_info_data['data'].append(model_info)
 
-    regressors = [("CART", DecisionTreeRegressor(), cart_params),
-                  ("RF", RandomForestRegressor(), rf_params),
-                  ('GBM', GradientBoostingRegressor(), gbm_params),
-                  ('XGBoost', XGBRegressor(objective='reg:squarederror'), xgboost_params),
-                  ('LightGBM', LGBMRegressor(), lightgbm_params),
-                  ("CatBoost", CatBoostRegressor(verbose=False), catboost_params)]
+                with(open('outputs/model_info_data.json', 'w')) as f:
+                    json.dump(model_info_data, f)
+            except:  # If not JSON file
+                print("No JSON file, JSON File is creating")
+                with(open('outputs/model_info_data.json', 'w')) as f:
+                    json.dump({'data': [model_info]}, f)
 
-    best_models = {}
-    print("\n########### Hyperparameter Optimization ###########\n")
-    for name, regressor, params in regressors:
-        print(f"########## {name} ##########")
-        rmse = np.mean(np.sqrt(-cross_val_score(regressor, X, y, cv=10, scoring="neg_mean_squared_error")))
-        print(f"RMSE: {round(rmse, 4)} ({name}) ")
+            # Save Models
+            os.makedirs("outputs/pickles/models", exist_ok=True)
+            model_dir = "outputs/pickles/models/"
+            with open(model_dir + f'{today}-{name}-{int(rmse_new)}.pkl', 'wb') as f:
+                pickle.dump(final_model, f)
 
-        gs_best = GridSearchCV(regressor, params, cv=3, n_jobs=-1, verbose=False).fit(X, y)
+        voting_model = VotingRegressor(estimators=[(best_models.iloc[0]["name"], best_models.iloc[0]["model"]),
+                                                   (best_models.iloc[1]["name"], best_models.iloc[1]["model"]),
+                                                   (best_models.iloc[2]["name"], best_models.iloc[2]["model"])])
 
-        final_model = regressor.set_params(**gs_best.best_params_)
-        rmse = np.mean(np.sqrt(-cross_val_score(final_model, X, y, cv=10, scoring="neg_mean_squared_error")))
-        print(f"RMSE (After): {round(rmse, 4)} ({name}) ")
+        voting_rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
 
-        print(f"{name} best params: {gs_best.best_params_}", end="\n\n")
+        print("\n########## Best Models ##########\n")
+        print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0).sort_values(
+            'date', ascending=False)[0:3][["name", "rmse_new"]])
+        print("\n########## Voting Regressor ##########\n")
+        print(f"RMSE: {round(voting_rmse, 4)} (Voting Regressor) ")
+        voting_model.fit(X, y)
 
-        best_models[name] = final_model
-        today = pd.to_datetime("today").strftime('%d-%m-%Y-%H:%M')
-        os.makedirs("outputs/pickles/models", exist_ok=True)
-        model_dir = "outputs/pickles/models/"
-        with open(model_dir + f'{name}-{today}.pkl', 'wb') as f:
-            pickle.dump(final_model, f)
+        # Save voting_model
+        with open(model_dir + f'{today}-VotingModel-{int(voting_rmse)}.pkl', 'wb') as f:
+            pickle.dump(voting_model, f)
 
+        return voting_model
 
-    voting_model = VotingRegressor(estimators=[('LightGBM', best_models["LightGBM"]),
-                                               ('GBM', best_models["GBM"]),
-                                               ('RF', best_models["RF"])])
-
-    print("\n########## Voting Regressor ##########\n")
-    rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
-    print(f"RMSE: {round(rmse, 4)} (''Voting Regressor) ")
-    voting_model.fit(X,y)
-
-    return voting_model
-
+    else:
+        pass
 
