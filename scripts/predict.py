@@ -6,13 +6,9 @@ from scripts.helper_functions import *
 #######################################
 # Uploading Results
 #######################################
-def predict(final_model):
+def predict(final_model, selected_features):
     pickle_dir = os.getcwd() + '/outputs/pickles/'
-    train_df = pickle.load(open(pickle_dir + 'train_dataframe.pkl', 'rb'))
     test_df = pickle.load(open(pickle_dir + 'test_dataframe.pkl', 'rb'))
-    y = train_df['SalePrice']
-    X = train_df.drop(["SalePrice", "Id"], axis=1)
-    selected_features = feature_selection(X, y)
 
     ##### Predicting #####
     submission_df = pd.DataFrame()

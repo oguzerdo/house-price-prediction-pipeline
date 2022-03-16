@@ -19,7 +19,7 @@ def train_model(debug=False, tuning=True):
 
 
     if debug:
-        train_df = train_df.sample(100)
+        train_df = train_df.sample(300)
         print("Debug mode is active. Running with subsample train set...", "\n")
     else:
         pass
@@ -38,6 +38,7 @@ def train_model(debug=False, tuning=True):
     best_models = models[0:3].merge(models_df, how='left', on='name')[["name", "model", "params"]]
 
     if tuning:
+        print("Model tuning is started...")
         # Automated Hyperparameter Optimization
         print("\n########### Hyperparameter Optimization ###########\n")
         for index, row in best_models.iterrows():
@@ -101,8 +102,9 @@ def train_model(debug=False, tuning=True):
         with open(model_dir + f'{today}-VotingModel-{int(voting_rmse)}.pkl', 'wb') as f:
             pickle.dump(voting_model, f)
 
-        return voting_model
+        return voting_model, selected_features
 
     else:
-        pass
+        print("Best model is:", best_models.iloc[0]["name"])
+        return best_models.iloc[0]["model"].fit(X,y), selected_features
 
