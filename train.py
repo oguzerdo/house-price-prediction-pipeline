@@ -2,12 +2,13 @@
 Train script
 """
 
-import pandas as pd
-import os
-import json
+import pickle as pickle
 
-from scripts.helper_functions import *
+from sklearn.ensemble import VotingRegressor
+from sklearn.model_selection import cross_val_score, GridSearchCV
+
 from scripts.config import *
+from scripts.helper_functions import *
 
 
 def train(debug=False, tuning=True):
@@ -83,8 +84,8 @@ def train(debug=False, tuning=True):
                                                    (best_models.iloc[1]["name"], best_models.iloc[1]["model"]),
                                                    (best_models.iloc[2]["name"], best_models.iloc[2]["model"])])
 
-        voting_rmse = np.mean(
-            np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
+        voting_rmse = np.mean(np.sqrt(-cross_val_score(voting_model, X, y, cv=10, scoring="neg_mean_squared_error")))
+
         print("\n########## Best Models ##########\n")
         print(pd.json_normalize(json.load(open("outputs/model_info_data.json", 'r'))["data"], max_level=0).sort_values('date', ascending=False)[0:3][["name", "rmse_new"]])
         print("\n########## Voting Regressor ##########\n")
@@ -95,6 +96,8 @@ def train(debug=False, tuning=True):
         with open(model_dir + f'{today}-VotingModel-{int(voting_rmse)}.pkl', 'wb') as f:
             pickle.dump(voting_model, f)
 
+        return voting_model
 
+    else:
+        pass
 
-train(debug=True)

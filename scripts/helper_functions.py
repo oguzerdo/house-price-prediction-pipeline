@@ -201,6 +201,7 @@ def all_models(X, y, test_size=0.2, random_state=42, classification=False, holdo
     from sklearn.ensemble import GradientBoostingClassifier
     from catboost import CatBoostClassifier
     from lightgbm import LGBMClassifier
+    from xgboost import XGBClassifier
 
     # Tum Base Modeller (Regression)
     from catboost import CatBoostRegressor
@@ -208,7 +209,7 @@ def all_models(X, y, test_size=0.2, random_state=42, classification=False, holdo
     from sklearn.ensemble import RandomForestRegressor, GradientBoostingRegressor
     from sklearn.tree import DecisionTreeRegressor
     from xgboost import XGBRegressor
-    from xgboost import XGBClassifier
+
 
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=test_size, random_state=random_state)
     all_models = []

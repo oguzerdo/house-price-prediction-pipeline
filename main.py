@@ -13,12 +13,20 @@ data.head()
 result_dir = os.getcwd()
 
 
+
 @contextmanager
 def timer(title):
     t0 = time.time()
     yield
-    print("{} - done in {:.0f}s".format(title, time.time() - t0))
-    print(" ")
+    if (time.time() - t0) < 60:
+        print("{} - done in {:.0f}s".format(title, time.time() - t0))
+        print(" ")
+    else:
+        duration = time.time() - t0
+        min = duration // 60
+        second = int(duration - min * 60)
+        print(f"{title} is finished in {min} min. {second} second")
+        print(" ")
 
 
 def main(eda):
@@ -45,7 +53,7 @@ def main(eda):
 
         with timer("Training"):
             print("Training Started")
-            final_model = traininig()
+            final_model = train_model()
 
         with timer("Predicting"):
             print("Predicting the Results")
