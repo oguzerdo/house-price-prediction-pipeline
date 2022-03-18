@@ -1,9 +1,9 @@
-# Regresyon Modelleri ile Ev Fiyat Tahmin Modeli
+# House Price Predicton with Regression Models & ML Datapipeline
 
 
 ![banner](https://storage.googleapis.com/kaggle-competitions/kaggle/5407/media/housesbanner.png)
 
---
+
 
 # Features
 
@@ -137,7 +137,7 @@ models: Shows models parameters and RMSE scores
 - *pickles/test_dataframe.pkl*
 - *pickles/train_dataframe.pkl*
 - *submission/*
-- model_info_data.json
+- *model_info_data.json*
 
 
 ## Libraries Used
