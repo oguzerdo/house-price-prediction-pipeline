@@ -21,9 +21,14 @@ req:
 
 compush: commit push
 
+run:	
+	python main.py --no-debug
 
-run:
+run_debug:
 	python main.py
+
+run_test:
+	pthon main.py --no-tuning
 
 req:
 	pip list --format=freeze > requirements.txt
