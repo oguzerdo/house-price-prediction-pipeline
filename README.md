@@ -147,6 +147,7 @@ pandas
 numpy
 matplotlib
 sklearn
+statsmodels
 pickle
 catboost
 lightgbm 
