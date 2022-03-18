@@ -147,12 +147,10 @@ pandas
 numpy
 matplotlib
 sklearn
-scipy
 pickle
 catboost
 lightgbm 
 xgboost
-mlxtend.regressor # This is for stacking part, works well with sklearn and others...
 ```
 
 ## Author
